@@ -1,1 +1,169 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Exchange Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .input-field { @apply w-full bg-slate-800 border border-slate-700 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all; }
+    </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen p-4 font-sans flex items-center justify-center">
+
+    <div class="max-w-md w-full glass rounded-[2rem] shadow-2xl overflow-hidden border border-slate-800">
+        
+        <div class="bg-blue-700 p-4 grid grid-cols-3 gap-2 text-center text-[10px] font-bold uppercase tracking-widest border-b border-blue-500">
+            <div><p class="opacity-80">BCV</p><p id="api-bcv" class="text-lg">--</p></div>
+            <div class="border-x border-blue-600/50"><p class="opacity-80">Paralelo</p><p id="api-para" class="text-lg">--</p></div>
+            <div><p class="opacity-80">Binance P2P</p><p id="api-usdt" class="text-lg">--</p></div>
+        </div>
+
+        <div class="p-6 space-y-5">
+            
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-blue-400 uppercase ml-1">Monto en Dólares ($)</label>
+                <input type="number" id="amount" placeholder="Ej: 100" class="w-full bg-slate-800 text-3xl font-bold rounded-2xl p-4 border border-slate-700 focus:ring-4 focus:ring-blue-500/30 outline-none transition-all">
+                <p class="text-sm text-slate-400 mt-1 ml-2">Costo Inversión: <span id="sub-bs" class="text-white font-medium">Bs 0.00</span></p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1 ml-1">Tasa Compra (Bs)</label>
+                    <input type="number" id="buy-rate" placeholder="Ej: 42.10" class="input-field text-lg">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1 ml-1">Costo USDT (Z/W)</label>
+                    <input type="number" id="usdt-cost" value="1.011" step="0.001" class="input-field text-lg text-yellow-500 font-bold">
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-bold text-slate-400 uppercase mb-1 ml-1 text-red-400">Comisiones Aplicadas</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="comm-plat" class="bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm outline-none">
+                        <option value="0.0375">Zinli (3.75%)</option>
+                        <option value="0.0299">Wally (2.99%)</option>
+                        <option value="0">Sin Plataforma</option>
+                    </select>
+                    <select id="comm-bank" class="bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm outline-none">
+                        <option value="0.015" selected>Banco (1.5%)</option>
+                        <option value="0">Sin Banco</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <label class="block text-xs font-bold text-green-400 uppercase mb-1 ml-1">Tu Tasa de Venta USDT (Bs)</label>
+                <input type="number" id="manual-sell" value="54.50" class="input-field text-2xl font-bold text-green-400">
+            </div>
+
+            <div class="bg-slate-900/80 rounded-2xl p-5 space-y-4 border border-slate-800 shadow-inner">
+                <div class="space-y-2 text-sm border-b border-slate-800 pb-3">
+                    <div class="flex justify-between"><span class="text-slate-500">Pérdida Comisiones:</span><span id="res-loss" class="text-red-400 font-medium">-$0.00</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Recibes Neto:</span><span id="res-usdt" class="font-black text-yellow-500">0.00 USDT</span></div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">Ganancia (Tasa Venta)</span>
+                            <span id="res-profit" class="text-xl font-black text-green-400">Bs 0.00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Ganancia (Tasa BCV)</span>
+                            <span id="res-profit-bcv" class="text-lg font-bold text-slate-300">Bs 0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let liveRates = { bcv: 0, para: 0, binance: 0 };
+
+        async function getRates() {
+            try {
+                // Usando una API agregada para Venezuela
+                const res = await fetch('https://ve.dolarapi.com/v1/dolares');
+                const data = await res.json();
+                
+                liveRates.bcv = data.find(d => d.fuente === 'bcv').promedio;
+                liveRates.para = data.find(d => d.fuente === 'enparalelovzla').promedio;
+                // Simulamos USDT basado en paralelo (o promedio si la API no lo trae directo)
+                liveRates.binance = liveRates.para; 
+
+                document.getElementById('api-bcv').innerText = liveRates.bcv.toFixed(2);
+                document.getElementById('api-para').innerText = liveRates.para.toFixed(2);
+                document.getElementById('api-usdt').innerText = liveRates.binance.toFixed(2);
+                
+                if(!document.getElementById('buy-rate').value) {
+                    document.getElementById('buy-rate').value = liveRates.bcv.toFixed(2);
+                }
+                if(!document.getElementById('manual-sell').value) {
+                    document.getElementById('manual-sell').value = liveRates.para.toFixed(2);
+                }
+                calculate();
+            } catch (e) {
+                console.error("Error cargando API");
+            }
+        }
+
+        function calculate() {
+            const amountUsd = parseFloat(document.getElementById('amount').value) || 0;
+            const buyRate = parseFloat(document.getElementById('buy-rate').value) || 0;
+            const usdtCostFactor = parseFloat(document.getElementById('usdt-cost').value) || 1;
+            const sellRateManual = parseFloat(document.getElementById('manual-sell').value) || 0;
+            const cPlat = parseFloat(document.getElementById('comm-plat').value);
+            const cBank = parseFloat(document.getElementById('comm-bank').value);
+
+            // 1. Costo Inversión en Bs
+            const totalInvestedBs = amountUsd * buyRate;
+            document.getElementById('sub-bs').innerText = `Bs ${totalInvestedBs.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+
+            // 2. Comisiones
+            const totalCommPerc = cPlat + cBank;
+            const lossUsd = amountUsd * totalCommPerc;
+            const netUsd = amountUsd - lossUsd;
+
+            // 3. Monto USDT
+            const totalUsdt = netUsd / usdtCostFactor;
+
+            // 4. Ganancia Tasa Manual
+            const revenueManualBs = totalUsdt * sellRateManual;
+            const profitManualBs = revenueManualBs - totalInvestedBs;
+
+            // 5. Ganancia Tasa BCV (Referencial)
+            const revenueBcvBs = totalUsdt * liveRates.bcv;
+            const profitBcvBs = revenueBcvBs - totalInvestedBs;
+
+            // Renderizado
+            document.getElementById('res-loss').innerText = `-$${lossUsd.toFixed(2)}`;
+            document.getElementById('res-usdt').innerText = `${totalUsdt.toFixed(2)} USDT`;
+            
+            // Resultado Manual
+            const profitEl = document.getElementById('res-profit');
+            profitEl.innerText = `Bs ${profitManualBs.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            profitEl.className = `text-xl font-black ${profitManualBs >= 0 ? 'text-green-400' : 'text-red-500'}`;
+
+            // Resultado BCV
+            const profitBcvEl = document.getElementById('res-profit-bcv');
+            profitBcvEl.innerText = `Bs ${profitBcvBs.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+            profitBcvEl.style.color = profitBcvBs >= 0 ? '#cbd5e1' : '#f87171';
+        }
+
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('input', calculate);
+        });
+
+        window.onload = getRates;
+    </script>
+</body>
+</html>
