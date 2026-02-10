@@ -3,91 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arbitraje VZLA - Responsivo</title>
+    <title>Binance Style Arbitrage - VZLA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .glass { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .input-field { @apply w-full bg-slate-800 border border-slate-700 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-white; }
-        body { background: radial-gradient(circle at top, #1e293b, #020617); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: #0B0E11; /* Binance Dark Background */
+        }
+        
+        .binance-card { 
+            background-color: #1E2329; 
+            border: 1px solid #2B3139;
+        }
+
+        .binance-input-container {
+            background-color: #2B3139;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .binance-input-container:focus-within {
+            border-color: #F3BA2F;
+        }
+
+        .btn-yellow {
+            background-color: #F3BA2F;
+            color: #000000;
+        }
+
+        .btn-yellow:hover {
+            background-color: #E2B237;
+        }
+
+        .text-binance-yellow { color: #F3BA2F; }
+        .text-binance-gray { color: #848E9C; }
+        
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
     </style>
 </head>
-<body class="text-white min-h-screen p-3 sm:p-6 font-sans flex items-center justify-center">
+<body class="text-white min-h-screen p-4 flex items-center justify-center">
 
-    <div class="w-full max-w-md glass rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-800">
+    <div class="w-full max-w-md binance-card rounded-2xl shadow-xl overflow-hidden">
         
-        <div class="bg-blue-600/20 p-4 grid grid-cols-2 gap-4 text-center border-b border-slate-800">
-            <div class="bg-slate-900/50 p-2 rounded-2xl border border-slate-700">
-                <p class="text-[10px] uppercase text-slate-400 font-bold tracking-widest">BCV Oficial</p>
-                <p id="api-bcv" class="text-lg font-black text-blue-400">--</p>
+        <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#191C21]">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="text-xs font-bold text-binance-gray">MERCADO P2P</span>
             </div>
-            <div class="bg-slate-900/50 p-2 rounded-2xl border border-slate-700">
-                <p class="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Paralelo</p>
-                <p id="api-para" class="text-lg font-black text-green-400">--</p>
+            <div class="flex gap-4">
+                <div class="text-right">
+                    <p class="text-[10px] text-binance-gray uppercase">BCV</p>
+                    <p id="api-bcv" class="text-sm font-bold">--</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-binance-gray uppercase">Paralelo</p>
+                    <p id="api-para" class="text-sm font-bold text-green-400">--</p>
+                </div>
             </div>
         </div>
 
-        <div class="p-5 sm:p-8 space-y-5">
+        <div class="p-6 space-y-6">
             
-            <div class="space-y-1">
-                <label class="block text-xs font-bold text-blue-400 uppercase tracking-tighter ml-1">Cantidad a enviar ($)</label>
-                <input type="number" id="amount" placeholder="0.00" class="w-full bg-transparent text-5xl font-black rounded-2xl py-2 outline-none border-b-2 border-slate-700 focus:border-blue-500 transition-all">
-                <div class="flex justify-between items-center mt-2 px-1">
-                    <span class="text-xs text-slate-500 uppercase font-bold">Gasto inicial:</span>
-                    <span id="sub-bs" class="text-sm font-bold text-slate-300">Bs 0.00</span>
+            <div class="space-y-2">
+                <label class="text-sm text-binance-gray">Enviar</label>
+                <div class="binance-input-container rounded-lg p-3 flex items-center">
+                    <input type="number" id="amount" placeholder="0.00" class="bg-transparent text-2xl font-bold w-full outline-none text-white">
+                    <span class="text-binance-yellow font-bold ml-2">USD</span>
+                </div>
+                <div class="flex justify-between text-xs px-1">
+                    <span class="text-binance-gray italic">Costo: <span id="sub-bs" class="text-white">Bs 0.00</span></span>
+                    <span class="text-binance-gray">Comisión: <span id="res-loss" class="text-red-400 font-bold">0.00</span></span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-4">
                 <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Tasa Compra (Bs)</label>
-                    <input type="number" id="buy-rate" class="input-field">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-1 text-yellow-500">Costo USDT</label>
-                    <input type="number" id="usdt-cost" value="1.011" step="0.001" class="input-field font-bold text-yellow-500">
-                </div>
-            </div>
-
-            <div class="bg-slate-900/40 p-3 rounded-2xl border border-slate-800 space-y-3">
-                <label class="block text-[10px] font-bold text-slate-500 uppercase text-center">Configurar Comisiones</label>
-                <div class="flex gap-2">
-                    <select id="comm-plat" class="flex-1 bg-slate-800 border-none rounded-lg p-2 text-xs outline-none">
-                        <option value="0.0375">Zinli (3.75%)</option>
-                        <option value="0.0299">Wally (2.99%)</option>
-                        <option value="0">0%</option>
-                    </select>
-                    <select id="comm-bank" class="flex-1 bg-slate-800 border-none rounded-lg p-2 text-xs outline-none">
-                        <option value="0.015" selected>Banco (1.5%)</option>
-                        <option value="0">0%</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="space-y-1">
-                <label class="block text-xs font-bold text-green-500 uppercase ml-1">Tasa Venta USDT (Bs)</label>
-                <input type="number" id="manual-sell" value="54.50" class="input-field text-2xl font-bold border-green-900/30">
-            </div>
-
-            <div class="space-y-3 pt-2">
-                <div class="flex justify-between text-sm px-1">
-                    <span class="text-slate-500">Comisiones: <span id="res-loss" class="text-red-500">-$0.00</span></span>
-                    <span class="text-slate-300 font-bold">Neto: <span id="res-usdt" class="text-yellow-500 font-black">0.00 ₮</span></span>
-                </div>
-
-                <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-4 shadow-xl shadow-blue-900/20">
-                    <p class="text-[10px] font-bold uppercase opacity-80 mb-1">Ganancia Final Estimada</p>
-                    <div class="flex justify-between items-end">
-                        <span id="res-profit" class="text-3xl font-black">Bs 0.00</span>
-                        <span class="text-[10px] font-bold bg-black/20 px-2 py-1 rounded">Venta: <span id="res-venta-final">0.00</span></span>
+                    <label class="text-xs text-binance-gray">Tasa de Compra</label>
+                    <div class="binance-input-container rounded-lg p-2">
+                        <input type="number" id="buy-rate" class="bg-transparent w-full outline-none text-sm font-bold">
                     </div>
                 </div>
-
-                <div class="flex justify-between items-center bg-slate-900 rounded-xl p-3 border border-slate-800">
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ganancia a Tasa BCV</span>
-                    <span id="res-profit-bcv" class="text-sm font-bold text-slate-400">Bs 0.00</span>
+                <div class="space-y-1">
+                    <label class="text-xs text-binance-gray">Tasa USDT/USD</label>
+                    <div class="binance-input-container rounded-lg p-2">
+                        <input type="number" id="usdt-cost" value="1.011" step="0.001" class="bg-transparent w-full outline-none text-sm font-bold text-binance-yellow">
+                    </div>
                 </div>
             </div>
+
+            <div class="space-y-1">
+                <label class="text-xs text-binance-gray">Método de Transferencia</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="comm-plat" class="binance-input-container rounded-lg p-2 text-xs outline-none">
+                        <option value="0.0375">Zinli (3.75%)</option>
+                        <option value="0.0299">Wally (2.99%)</option>
+                        <option value="0">Sin Plataforma</option>
+                    </select>
+                    <select id="comm-bank" class="binance-input-container rounded-lg p-2 text-xs outline-none">
+                        <option value="0.015" selected>Banco (1.5%)</option>
+                        <option value="0">Sin Banco</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-2 pt-2">
+                <label class="text-sm text-binance-gray">Vender USDT a tasa:</label>
+                <div class="binance-input-container rounded-lg p-3 flex items-center border-l-4 border-l-green-500">
+                    <input type="number" id="manual-sell" value="54.50" class="bg-transparent text-xl font-bold w-full outline-none text-green-400">
+                    <span class="text-binance-gray font-bold text-xs ml-2">VES/USDT</span>
+                </div>
+            </div>
+
+            <div class="bg-[#2B3139] rounded-xl p-4 space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-binance-gray uppercase font-bold tracking-tight">Monto Neto Recibido</span>
+                    <span id="res-usdt" class="text-lg font-black text-white">0.00 USDT</span>
+                </div>
+                
+                <div class="border-t border-gray-700 pt-3">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p class="text-[10px] text-binance-gray uppercase font-bold">Ganancia Estimada</p>
+                            <p id="res-profit" class="text-3xl font-black text-binance-yellow">Bs 0.00</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-binance-gray uppercase">Venta Total</p>
+                            <p id="res-venta-final" class="text-sm font-bold">Bs 0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -96,27 +147,27 @@
 
         async function getRates() {
             try {
-                // Fetch BCV
-                const resBcv = await fetch('https://ve.dolarapi.com/v1/dolares/oficial');
+                // Fetch BCV & Paralelo
+                const [resBcv, resPara] = await Promise.all([
+                    fetch('https://ve.dolarapi.com/v1/dolares/oficial'),
+                    fetch('https://ve.dolarapi.com/v1/dolares/paralelo')
+                ]);
+                
                 const dataBcv = await resBcv.json();
-                rates.bcv = dataBcv.promedio;
-                document.getElementById('api-bcv').innerText = rates.bcv.toFixed(2);
-
-                // Fetch Paralelo
-                const resPara = await fetch('https://ve.dolarapi.com/v1/dolares/paralelo');
                 const dataPara = await resPara.json();
+                
+                rates.bcv = dataBcv.promedio;
                 rates.para = dataPara.promedio;
+                
+                document.getElementById('api-bcv').innerText = rates.bcv.toFixed(2);
                 document.getElementById('api-para').innerText = rates.para.toFixed(2);
 
-                // Autocompletar tasas si están vacías
                 if(!document.getElementById('buy-rate').value) document.getElementById('buy-rate').value = rates.bcv.toFixed(2);
                 if(!document.getElementById('manual-sell').value) document.getElementById('manual-sell').value = rates.para.toFixed(2);
                 
                 calculate();
             } catch (e) {
-                console.error("Error cargando APIs");
-                document.getElementById('api-bcv').innerText = "Err";
-                document.getElementById('api-para').innerText = "Err";
+                console.error("API error");
             }
         }
 
@@ -128,32 +179,36 @@
             const cPlat = parseFloat(document.getElementById('comm-plat').value);
             const cBank = parseFloat(document.getElementById('comm-bank').value);
 
-            // Inversión
+            // Inversion
             const totalInvestedBs = amountUsd * buyRate;
             document.getElementById('sub-bs').innerText = `Bs ${totalInvestedBs.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
 
-            // Comisiones y USDT
-            const lossUsd = amountUsd * (cPlat + cBank);
+            // Comisiones
+            const totalCommPerc = cPlat + cBank;
+            const lossUsd = amountUsd * totalCommPerc;
             const netUsd = amountUsd - lossUsd;
             const totalUsdt = netUsd / usdtFactor;
 
-            // Ganancias
+            // Ganancia
             const totalRevenueBs = totalUsdt * sellRate;
             const profitBs = totalRevenueBs - totalInvestedBs;
-            const profitBcvBs = (totalUsdt * rates.bcv) - totalInvestedBs;
 
-            // Update UI
+            // UI
             document.getElementById('res-loss').innerText = `-$${lossUsd.toFixed(2)}`;
-            document.getElementById('res-usdt').innerText = `${totalUsdt.toFixed(2)} ₮`;
-            document.getElementById('res-venta-final').innerText = totalRevenueBs.toFixed(0);
+            document.getElementById('res-usdt').innerText = `${totalUsdt.toFixed(2)} USDT`;
+            document.getElementById('res-venta-final').innerText = `Bs ${totalRevenueBs.toLocaleString('es-VE', {maximumFractionDigits: 0})}`;
             
             const profitEl = document.getElementById('res-profit');
             profitEl.innerText = `Bs ${profitBs.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            profitEl.className = `text-3xl font-black ${profitBs >= 0 ? 'text-white' : 'text-red-400'}`;
-
-            const profitBcvEl = document.getElementById('res-profit-bcv');
-            profitBcvEl.innerText = `Bs ${profitBcvBs.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-            profitBcvEl.style.color = profitBcvBs >= 0 ? '#94a3b8' : '#f87171';
+            
+            // Color logic
+            if(profitBs > 0) {
+                profitEl.className = "text-3xl font-black text-green-400";
+            } else if(profitBs < 0) {
+                profitEl.className = "text-3xl font-black text-red-400";
+            } else {
+                profitEl.className = "text-3xl font-black text-binance-yellow";
+            }
         }
 
         document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calculate));
